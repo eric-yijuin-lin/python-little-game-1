@@ -73,7 +73,7 @@ while running:
 
     # Flip the display
     pygame.display.flip()
-    fps_clock.tick(10)
+    fps_clock.tick(30)
 
 # Done! Time to quit.
 pygame.quit()

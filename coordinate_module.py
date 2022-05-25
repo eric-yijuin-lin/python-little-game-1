@@ -66,21 +66,21 @@ class CoordinateHelper:
                 result.append((cell.x + offset[0], cell.y + offset[1]))
         return result
 
-    def get_clear_coordinates_v2(self, sprite: ColorBlockSprite) -> list:
-        result = []
-        all_offsets =  ( # 4 tubples of 4 directions, each direction contains 2 tuples of offsets
-            ((-1, 0), (-2, 0)), # left
-            ((1, 0), (2, 0)), # right
-            ((0, -1), (0, -2)), # down
-            ((0, 1), (0, 2)), # up
-        )
+    def get_clear_coordinates_dict(self, sprite: ColorBlockSprite) -> dict:
+        result = {}
+        all_offsets =  { # each direction contains 2 tuples of offsets
+            'left': ((-1, 0), (-2, 0)),
+            'right': ((1, 0), (2, 0)),
+            'down': ((0, -1), (0, -2)),
+            'up': ((0, 1), (0, 2)),
+        }
 
-        for dir_offsets in all_offsets:
+        for key, value in all_offsets.items():
             is_dir_needed = True
-            for offset in dir_offsets:
+            for offset in value:
                 if not self.is_valid_coordinate(sprite.x + offset[0], sprite.y + offset[1]):
                     is_dir_needed = False
                     break
             if is_dir_needed:
-                result.append(dir_offsets)
+                result[key] = value
         return result
