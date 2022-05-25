@@ -68,9 +68,9 @@ class GameManager:
         elif self.game_status == GameStatus.ShowingMatched:
                 pass
     def has_match(self, sprite1: ColorBlockSprite, sprite2: ColorBlockSprite):
-        matched_count1 = self.get_matched_count_dict(sprite1)
-        matched_count2 = self.get_matched_count_dict(sprite2)
-        return matched_count1 + matched_count2 > 0
+        matched_dict1 = self.get_matched_count_dict(sprite1)
+        matched_dict2 = self.get_matched_count_dict(sprite2)
+        return len(matched_dict1) + len(matched_dict2) > 0
 
     def get_available_color(self, x: int, y: int) -> list:
         available_colors = list(self.color_dict.keys())
@@ -164,9 +164,9 @@ class GameManager:
         return count
 
     def get_matched_count_dict(self, sprite: ColorBlockSprite) -> dict:
-        total_match = 0
+        result = {}
         offset_dict = self.coord_helper.get_clear_coordinates_dict(sprite)
-        for dir_offsets in offset_dict.values():
+        for direction, dir_offsets in offset_dict.items():
             dir_match = 0
             for offsets in dir_offsets:
                 x = sprite.x + offsets[0]
@@ -174,8 +174,8 @@ class GameManager:
                 if self.sprite_map[y][x].color == sprite.color:
                     dir_match += 1
             if dir_match == 2:
-                total_match += 2
-        return total_match
+                result[direction] = dir_match
+        return result
 
     def get_score(self, matched_count: int, combo: int):
         count_weight = self.get_score_weight(matched_count)
