@@ -77,10 +77,12 @@ class CoordinateHelper:
 
         for key, value in all_offsets.items():
             is_dir_needed = True
+            dir_coords = []
             for offset in value:
                 if not self.is_valid_coordinate(sprite.x + offset[0], sprite.y + offset[1]):
                     is_dir_needed = False
                     break
+                dir_coords.append((sprite.x + offset[0], sprite.y + offset[1]))
             if is_dir_needed:
-                result[key] = value
+                result[key] = dir_coords
         return result
