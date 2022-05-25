@@ -41,7 +41,34 @@ class GameManager:
     #     available_colors = self.get_available_color(x, y)
     #     rand_index = randint(0, len(available_colors) - 1)
     #     rand_color = available_colors[rand_index]
-    #     self.cell_map[y][x] = rand_color 
+    #     self.cell_map[y][x] = rand_color
+
+    def process_frame(self) -> None:
+        if self.game_status == GameStatus.Idle:
+            return
+        elif self.game_status == GameStatus.SwapForward:
+            self.selected_sprite_1.process_frame()
+            self.selected_sprite_2.process_frame()
+            if self.selected_sprite_1.reached_destination() and self.selected_sprite_2.reached_destination():
+                self.swap_cell(self.selected_sprite_1, self.selected_sprite_2)
+                if not self.has_match(self.selected_sprite_1, self.selected_sprite_2):
+                    self.selected_sprite_1.set_destination_by_sprite(self.selected_sprite_2)
+                    self.selected_sprite_2.set_destination_by_sprite(self.selected_sprite_1)
+                    self.game_status = GameStatus.SwapingBack
+                else:
+                    self.game_status = GameStatus.ShowingMatched
+        elif self.game_status == GameStatus.SwapingBack:
+            self.selected_sprite_1.process_frame()
+            self.selected_sprite_2.process_frame()
+            if self.selected_sprite_1.reached_destination() and self.selected_sprite_2.reached_destination():
+                self.selected_sprite_1 = None
+                self.selected_sprite_2 = None
+                self.game_status = GameStatus.Idle
+                
+    def has_match(self, sprite1: ColorBlockSprite, sprite2: ColorBlockSprite):
+        matched_count1 = self.get_matched_count_v2(sprite1)
+        matched_count2 = self.get_matched_count_v2(sprite2)
+        return matched_count1 + matched_count2 > 0
 
     def get_available_color(self, x: int, y: int) -> list:
         available_colors = list(self.color_dict.keys())
@@ -92,9 +119,9 @@ class GameManager:
             self.selected_sprite_1 = None
             self.selected_sprite_2 = None
             return
-        # self.selected_sprite_1.color = 'black'
-        # self.selected_sprite_2.color = 'black'
-        self.game_status = GameStatus.SwapCellRead
+        self.selected_sprite_1.set_destination_by_sprite(self.selected_sprite_2)
+        self.selected_sprite_2.set_destination_by_sprite(self.selected_sprite_1)
+        self.game_status = GameStatus.SwapForward
 
     def swap_cell(self, cell_1: CellObject, cell_2: CellObject):
         temp_x = cell_1.x
@@ -133,6 +160,20 @@ class GameManager:
             if self.sprite_map[y][x].color == color:
                 count += 1
         return count
+
+    def get_matched_count_v2(self, sprite: ColorBlockSprite):
+        total_match = 0
+        coord_offsets = self.coord_helper.get_clear_coordinates_v2(sprite)
+        for dir_offsets in coord_offsets:
+            dir_match = 0
+            for offsets in dir_offsets:
+                x = sprite.x + offsets[0]
+                y = sprite.y + offsets[1]
+                if self.sprite_map[y][x].color == sprite.color:
+                    dir_match += 1
+            if dir_match == 2:
+                total_match += 2
+        return total_match
 
     def get_score(self, matched_count: int, combo: int):
         count_weight = self.get_score_weight(matched_count)

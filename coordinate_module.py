@@ -29,25 +29,25 @@ class CoordinateHelper:
             return False
         return True
 
-    def get_color_check_range(self, x: int, y: int, dir: ColorCheckRangeEnum) -> dict:
+    def get_color_check_range(self, x: int, y: int, direction: ColorCheckRangeEnum) -> dict:
         check_range = {
             'x-start': x,
             'x-end': x+1,
             'y-start': y,
             'y-end': y+1,
         }
-        if dir == ColorCheckRangeEnum.Top:
+        if direction == ColorCheckRangeEnum.Top:
             check_range['y-start'] = y-2
-        elif dir == ColorCheckRangeEnum.Bottom:
+        elif direction == ColorCheckRangeEnum.Bottom:
             check_range['y-end'] = y+3
-        elif dir == ColorCheckRangeEnum.Left:
+        elif direction == ColorCheckRangeEnum.Left:
             check_range['x-start'] = x-2
-        elif dir == ColorCheckRangeEnum.Right:
+        elif direction == ColorCheckRangeEnum.Right:
             check_range['x-end'] = x+3
-        elif dir == ColorCheckRangeEnum.MiddleX:
+        elif direction == ColorCheckRangeEnum.MiddleX:
             check_range['x-start'] = x-1
             check_range['x-end'] = x+2
-        elif dir == ColorCheckRangeEnum.MiddleY:
+        elif direction == ColorCheckRangeEnum.MiddleY:
             check_range['y-start'] = y-1
             check_range['y-end'] = y+2
         return check_range
@@ -64,4 +64,23 @@ class CoordinateHelper:
         for offset in self.clearing_offsets:
             if self.is_valid_coordinate(cell.x + offset[0], cell.y + offset[1]):
                 result.append((cell.x + offset[0], cell.y + offset[1]))
+        return result
+
+    def get_clear_coordinates_v2(self, sprite: ColorBlockSprite) -> list:
+        result = []
+        all_offsets =  ( # 4 tubples of 4 directions, each direction contains 2 tuples of offsets
+            ((-1, 0), (-2, 0)), # left
+            ((1, 0), (2, 0)), # right
+            ((0, -1), (0, -2)), # down
+            ((0, 1), (0, 2)), # up
+        )
+
+        for dir_offsets in all_offsets:
+            is_dir_needed = True
+            for offset in dir_offsets:
+                if not self.is_valid_coordinate(sprite.x + offset[0], sprite.y + offset[1]):
+                    is_dir_needed = False
+                    break
+            if is_dir_needed:
+                result.append(dir_offsets)
         return result

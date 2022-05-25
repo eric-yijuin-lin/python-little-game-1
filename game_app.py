@@ -46,19 +46,13 @@ while running:
             x = pos[0] // block_size
             y = pos[1] // block_size
             gm.set_selection(x, y)
-            if gm.game_status == GameStatus.SwapCellRead:
-                gm.selected_sprite_1.set_destination_by_sprite(gm.selected_sprite_2)
-                gm.selected_sprite_2.set_destination_by_sprite(gm.selected_sprite_1)
-                gm.game_status = GameStatus.SwappingCell
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_SPACE:
                 gm = GameManager()
 
     if gm.game_status == GameStatus.Idle:
         continue
-    elif gm.game_status == GameStatus.SwappingCell:
-        gm.selected_sprite_1.process_frame()
-        gm.selected_sprite_2.process_frame()
+    gm.process_frame()
 
     # Fill the background with white
     screen.fill((255, 255, 255))
@@ -76,11 +70,10 @@ while running:
                 ((sprite.x * block_size + block_size//2), (sprite.y * block_size) + block_size//2),
                 block_size//2)
 
-    if gm.game_status == GameStatus.ShowingMatched
 
     # Flip the display
     pygame.display.flip()
-    fps_clock.tick(5)
+    fps_clock.tick(10)
 
 # Done! Time to quit.
 pygame.quit()

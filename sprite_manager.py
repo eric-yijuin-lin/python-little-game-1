@@ -39,7 +39,8 @@ class SpriteBase:
         pass
 
 class ColorBlockSprite(SpriteBase):
-    destination: tuple # (x, y)
+    destination: tuple = None # (x, y)
+    hilighted: bool = False
     def __init__(self, cell: CellObject, speed) -> None:
         super().__init__(
             cell.x, 
