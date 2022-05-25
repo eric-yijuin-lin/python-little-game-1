@@ -52,12 +52,12 @@ class GameManager:
             self.selected_sprite_2.process_frame()
             if self.selected_sprite_1.reached_destination() and self.selected_sprite_2.reached_destination():
                 self.swap_cell(self.selected_sprite_1, self.selected_sprite_2)
-                if not self.has_match(self.selected_sprite_1, self.selected_sprite_2):
+                if self.has_match(self.selected_sprite_1) or self.has_match(self.selected_sprite_2):
+                    self.game_status = GameStatus.ShowingMatched
+                else:
                     self.selected_sprite_1.set_destination_by_sprite(self.selected_sprite_2)
                     self.selected_sprite_2.set_destination_by_sprite(self.selected_sprite_1)
                     self.game_status = GameStatus.SwapingBack
-                else:
-                    self.game_status = GameStatus.ShowingMatched
         elif self.game_status == GameStatus.SwapingBack:
             self.selected_sprite_1.process_frame()
             self.selected_sprite_2.process_frame()
@@ -66,11 +66,13 @@ class GameManager:
                 self.selected_sprite_2 = None
                 self.game_status = GameStatus.Idle
         elif self.game_status == GameStatus.ShowingMatched:
-                pass
-    def has_match(self, sprite1: ColorBlockSprite, sprite2: ColorBlockSprite):
-        matched_dict1 = self.get_matched_count_dict(sprite1)
-        matched_dict2 = self.get_matched_count_dict(sprite2)
-        return len(matched_dict1) + len(matched_dict2) > 0
+            if self.has_match(self.selected_sprite_1):
+                self.set_matched_highlight(self.selected_sprite_1)
+            if self.has_match(self.selected_sprite_2):
+                self.set_matched_highlight(self.selected_sprite_2)
+    def has_match(self, sprite: ColorBlockSprite):
+        matched_dict = self.get_matched_count_dict(sprite)
+        return len(matched_dict) > 0
 
     def get_available_color(self, x: int, y: int) -> list:
         available_colors = list(self.color_dict.keys())
@@ -136,23 +138,18 @@ class GameManager:
         self.sprite_map[cell_2.y][cell_2.x].y = temp_y
         self.sprite_map[cell_2.y][cell_2.x].color = temp_color
         
-    def process_turn(self, cell_1: CellObject, cell_2) -> int:
-        clear_cordinates1 = self.coord_helper.get_clear_coordinates(cell_1)
-        clear_cordinates2 = self.coord_helper.get_clear_coordinates(cell_2)
-        matched_count1 = self.get_matched_count(cell_1.color, clear_cordinates1)
-        matched_count2 = self.get_matched_count(cell_2.color, clear_cordinates2)
-        if matched_count1 == 0 and matched_count2 == 0:
-            # no matched, swap back
-            self.swap_cell(self.selected_sprite_1, self.selected_sprite_2)
-            return
-
-        combo = 2 if (matched_count1 > 0 and matched_count2 > 0) else 1
-        score = self.get_score(matched_count1, combo) + self.get_score(matched_count2, combo)
-        self.clear_cells(clear_cordinates1)
-        self.clear_cells(clear_cordinates2)
-
-        return score
-
+    def set_matched_highlight(self, sprite: ColorBlockSprite) -> None:
+        coord_dict = self.coord_helper.get_clear_coordinates_dict(sprite)
+        match_count_dict = self.get_matched_count_dict(sprite)
+        coords_to_hilight = []
+        for key in match_count_dict:
+            coords_to_hilight.append(coord_dict[key])
+        for dir_coords in coords_to_hilight:
+            for coord in dir_coords:
+                x = coord[0]
+                y = coord[1]
+                self.sprite_map[y][x].hilighted = True
+        sprite.hilighted = True
 
     def get_matched_count(self, color: str, clear_coordinates: list) -> int:
         count = 0
@@ -166,11 +163,11 @@ class GameManager:
     def get_matched_count_dict(self, sprite: ColorBlockSprite) -> dict:
         result = {}
         offset_dict = self.coord_helper.get_clear_coordinates_dict(sprite)
-        for direction, dir_offsets in offset_dict.items():
+        for direction, dir_coords in offset_dict.items():
             dir_match = 0
-            for offsets in dir_offsets:
-                x = sprite.x + offsets[0]
-                y = sprite.y + offsets[1]
+            for coord in dir_coords:
+                x = coord[0]
+                y = coord[1]
                 if self.sprite_map[y][x].color == sprite.color:
                     dir_match += 1
             if dir_match == 2:

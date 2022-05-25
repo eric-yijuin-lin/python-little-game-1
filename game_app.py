@@ -69,6 +69,16 @@ while running:
                 color_code,
                 ((sprite.x * block_size + block_size//2), (sprite.y * block_size) + block_size//2),
                 block_size//2)
+            if sprite.hilighted:
+                pygame.draw.rect(
+                    screen,
+                    (0, 0, 0),
+                    pygame.Rect(
+                        sprite.x * block_size, 
+                        sprite.y * block_size, 
+                        10,
+                        10)
+                )
 
 
     # Flip the display
