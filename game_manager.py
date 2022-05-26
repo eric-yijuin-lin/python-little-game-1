@@ -51,7 +51,9 @@ class GameManager:
             self.selected_sprite_1.process_frame()
             self.selected_sprite_2.process_frame()
             if self.selected_sprite_1.reached_destination() and self.selected_sprite_2.reached_destination():
-                self.swap_cell(self.selected_sprite_1, self.selected_sprite_2)
+                coord1 = self.selected_sprite_1.get_coord()
+                coord2 = self.selected_sprite_2.get_coord()
+                self.swap_sprite(coord1, coord2)
                 if self.has_match(self.selected_sprite_1) or self.has_match(self.selected_sprite_2):
                     self.game_status = GameStatus.ShowingMatched
                 else:
@@ -66,12 +68,19 @@ class GameManager:
                 self.selected_sprite_2 = None
                 self.game_status = GameStatus.Idle
         elif self.game_status == GameStatus.ShowingMatched:
+            self.selected_sprite_1.show_sprite_info()
+            self.selected_sprite_2.show_sprite_info()
             if self.has_match(self.selected_sprite_1):
                 self.set_matched_highlight(self.selected_sprite_1)
             if self.has_match(self.selected_sprite_2):
                 self.set_matched_highlight(self.selected_sprite_2)
+            if self.frame_delay > 0:
+                self.frame_delay -= 1
+            else:
+                self.frame_delay = 30
+                self.game_status = GameStatus.ClearingCell
     def has_match(self, sprite: ColorBlockSprite):
-        matched_dict = self.get_matched_count_dict(sprite)
+        matched_dict = self.get_matched_coordinates(sprite)
         return len(matched_dict) > 0
 
     def get_available_color(self, x: int, y: int) -> list:
@@ -114,11 +123,11 @@ class GameManager:
             return
         if self.selected_sprite_1 is None:
             self.selected_sprite_1 = self.sprite_map[y][x]
-            print(f'selected: x={x}, y={y}, sprite.x={self.selected_sprite_1.x}, sprite.y={self.selected_sprite_1.y}, sprite.color={self.selected_sprite_1.color}')
+            self.selected_sprite_1.show_sprite_info()
             return
 
         self.selected_sprite_2 = self.sprite_map[y][x]
-        print(f'selected: x={x}, y={y}, sprite.x={self.selected_sprite_1.x}, sprite.y={self.selected_sprite_1.y}, sprite.color={self.selected_sprite_1.color}')
+        self.selected_sprite_2.show_sprite_info()
         if not self.coord_helper.is_neighbor(self.selected_sprite_1, self.selected_sprite_2):
             self.selected_sprite_1 = None
             self.selected_sprite_2 = None
@@ -127,28 +136,26 @@ class GameManager:
         self.selected_sprite_2.set_destination_by_sprite(self.selected_sprite_1)
         self.game_status = GameStatus.SwapForward
 
-    def swap_cell(self, cell_1: CellObject, cell_2: CellObject):
-        temp_x = cell_1.x
-        temp_y = cell_1.y
-        temp_color = cell_1.color
-        self.sprite_map[cell_1.y][cell_1.x].x = cell_2.x
-        self.sprite_map[cell_1.y][cell_1.x].y = cell_2.y
-        self.sprite_map[cell_1.y][cell_1.x].color = cell_2.color
-        self.sprite_map[cell_2.y][cell_2.x].x = temp_x
-        self.sprite_map[cell_2.y][cell_2.x].y = temp_y
-        self.sprite_map[cell_2.y][cell_2.x].color = temp_color
+    def swap_sprite(self, coord1: tuple, coord2: tuple):
+        x1 = coord1[0]
+        y1 = coord1[1]
+        x2 = coord2[0]
+        y2 = coord2[1]
+        temp_color = self.sprite_map[y1][x1].color
+
+        self.sprite_map[y1][x1].x = x1
+        self.sprite_map[y1][x1].y = y1
+        self.sprite_map[y1][x1].color = self.sprite_map[y2][x2].color
+        self.sprite_map[y2][x2].x = x2
+        self.sprite_map[y2][x2].y = y2
+        self.sprite_map[y2][x2].color = temp_color
         
     def set_matched_highlight(self, sprite: ColorBlockSprite) -> None:
-        coord_dict = self.coord_helper.get_clear_coordinates_dict(sprite)
-        match_count_dict = self.get_matched_count_dict(sprite)
-        coords_to_hilight = []
-        for key in match_count_dict:
-            coords_to_hilight.append(coord_dict[key])
-        for dir_coords in coords_to_hilight:
-            for coord in dir_coords:
-                x = coord[0]
-                y = coord[1]
-                self.sprite_map[y][x].hilighted = True
+        matched_coords = self.get_matched_coordinates(sprite)
+        for coord in matched_coords:
+            x = coord[0]
+            y = coord[1]
+            self.sprite_map[y][x].hilighted = True
         sprite.hilighted = True
 
     def get_matched_count(self, color: str, clear_coordinates: list) -> int:
@@ -192,6 +199,23 @@ class GameManager:
             return 3
         else:
             return 3 + (count - 7) * (count - 7)
+
+    def get_matched_coordinates(self, sprite: ColorBlockSprite) -> set:
+        results = set()
+        sliding_windows = self.coord_helper.get_sliding_windows(sprite)
+        for window in sliding_windows:
+            if self.is_matched_window(sprite, window):
+                for coord in window:
+                    results.add(coord)
+        return results
+
+    def is_matched_window(self, sprite: ColorBlockSprite, coord_window: list) -> bool:
+        for coord in coord_window:
+            x = coord[0]
+            y = coord[1]
+            if self.sprite_map[y][x].color != sprite.color:
+                return False
+        return True
 
     def clear_cells(self, clear_coordinates: list) -> None:
         for coord in clear_coordinates:

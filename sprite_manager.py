@@ -83,7 +83,7 @@ class ColorBlockSprite(SpriteBase):
             self.y += self.speed
             if self.y > self.destination[1]:
                 self.y = self.destination[1]
-        print(f'moving: x={self.x}, y={self.y}')
+        # print(f'moving: x={self.x}, y={self.y}')
 
     def process_frame(self) -> None:
         self.move()
@@ -103,3 +103,9 @@ class ColorBlockSprite(SpriteBase):
                 reach_y = False
 
         return reach_x and reach_y
+
+    def get_coord(self) -> tuple:
+        return (self.x, self.y)
+
+    def show_sprite_info(self) -> None:
+        print(f'x={self.x}, y={self.y}, color={self.color}')

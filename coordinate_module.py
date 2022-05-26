@@ -19,6 +19,14 @@ class CoordinateHelper:
         (0, -2), (0, -1), (0, 1), (0, 2),
         (0, 0)
     ]
+    sliding_windows = (
+        ((-2, 0), (-1, 0), (0, 0)),
+        ((-1, 0), (0, 0), (1, 0)),
+        ((0, 0), (1, 0), (2, 0)),
+        ((0, -2), (0, -1), (0, 0)),
+        ((0, -1), (0, 0), (0, 1)),
+        ((0, 0), (0, 1), (0, 2)),
+    )
     def __init__(self, dimension_x: int, dimension_y: int) -> None:
         self.dimension_x = dimension_x
         self.dimension_y = dimension_y
@@ -85,4 +93,18 @@ class CoordinateHelper:
                 dir_coords.append((sprite.x + offset[0], sprite.y + offset[1]))
             if is_dir_needed:
                 result[key] = dir_coords
+        return result
+
+    def get_sliding_windows(self, sprite: ColorBlockSprite) -> list:
+        result = []
+        for window in self.sliding_windows:
+            is_window_needed = True
+            temp_window = []
+            for offset in window:
+                temp_window.append((sprite.x + offset[0], sprite.y + offset[1]))
+                if not self.is_valid_coordinate(sprite.x + offset[0], sprite.y + offset[1]):
+                    is_window_needed = False
+                    break
+            if is_window_needed:
+                result.append(temp_window)
         return result
