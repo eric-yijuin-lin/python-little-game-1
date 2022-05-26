@@ -19,4 +19,5 @@ class GameStatus(Enum):
     ClearingAnimation = 6,
     ReAligningBlock = 7,
     ReAligningAnimation = 8,
-    DropingNewBlock = 9,
+    NewBlockCreating = 9,
+    NewBlockDroping = 10,

@@ -36,7 +36,8 @@ class GameManager:
             GameStatus.ClearingAnimation: self.process_clear_animation,
             GameStatus.ReAligningBlock: self.process_realign_block,
             GameStatus.ReAligningAnimation: self.process_realign_animation,
-            GameStatus.DropingNewBlock: self.process_drop_new_blocks,
+            GameStatus.NewBlockCreating: self.process_new_block_create,
+            GameStatus.NewBlockDroping: self.process_new_block_drop,
         }
 
     def init_cell_map(self) -> None:
@@ -129,9 +130,12 @@ class GameManager:
                 if not sprite.reached_destination():
                     not_reached_count += 1
         if not_reached_count == 0:
-            self.game_status = GameStatus.DropingNewBlock
+            self.game_status = GameStatus.NewBlockCreating
 
-    def process_drop_new_blocks(self) -> None:
+    def process_new_block_create(self) -> None:
+        pass        
+
+    def process_new_block_drop(self) -> None:
         pass
 
     def has_match(self, sprite: ColorBlockSprite):
@@ -293,3 +297,19 @@ class GameManager:
         x = sprite.x
         y = sprite.y + distance
         sprite.set_destination((x, y))
+
+    def refresh_sprite_map(self) -> list:
+        '''
+        Refreshes sprite map status after clearing matched cells,
+        also returns a list represents the cleared count of each column
+        '''
+        column_clear_count = []
+        for x in range(0, self.dimension_x):
+            count = 0
+            for y in range(self.dimension_y -1, -1, -1):
+                if self.sprite_map[y][x].cleared:
+                    count += 1
+                if self.coord_helper.is_valid_coordinate(x, y + count):
+                    self.sprite_map[y][x].color = self.sprite_map[y + count][x].color
+            column_clear_count.append(count)
+        return column_clear_count
