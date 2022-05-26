@@ -12,10 +12,10 @@ class CellObject:
 class GameStatus(Enum):
     Initializing = 0,
     Idle = 1,
-    SwapForward = 2
+    SwapingForward = 2
     SwapingBack = 3,
     ShowingMatched = 4,
-    ClearingCell = 5,
+    ClearingBlock = 5,
     ClearingAnimation = 6,
-    ReAligningCell = 7,
-    DropingNewCell = 8
+    ReAligningBlock = 7,
+    DropingNewBlock = 8

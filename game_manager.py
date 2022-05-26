@@ -26,6 +26,17 @@ class GameManager:
     def __init__(self) -> None:
         self.coord_helper = CoordinateHelper(self.dimension_x, self.dimension_y)
         self.init_cell_map()
+        self.action_dict = {
+            GameStatus.Initializing: self.process_initializing,
+            GameStatus.Idle: self.process_idle,
+            GameStatus.SwapingForward: self.process_swap_forward,
+            GameStatus.SwapingBack: self.process_swap_back,
+            GameStatus.ShowingMatched: self.process_show_matched,
+            GameStatus.ClearingBlock: self.process_clear_block,
+            GameStatus.ClearingAnimation: self.process_clear_animation,
+            GameStatus.ReAligningBlock: self.process_realign_block,
+            GameStatus.DropingNewBlock: self.process_drop_new_blocks,
+        }
 
     def init_cell_map(self) -> None:
         for _ in range(0, self.dimension_y):
@@ -38,64 +49,77 @@ class GameManager:
                 self.sprite_map[y][x] = ColorBlockSprite(
                     CellObject(x, y, color), 0.03
                 )
-    # def debug_color(self, x, y):
-    #     available_colors = self.get_available_color(x, y)
-    #     rand_index = randint(0, len(available_colors) - 1)
-    #     rand_color = available_colors[rand_index]
-    #     self.cell_map[y][x] = rand_color
 
     def process_frame(self) -> None:
-        if self.game_status == GameStatus.Idle:
-            return
-        elif self.game_status == GameStatus.SwapForward:
-            self.selected_sprite_1.process_frame()
-            self.selected_sprite_2.process_frame()
-            if self.selected_sprite_1.reached_destination() and self.selected_sprite_2.reached_destination():
-                coord1 = self.selected_sprite_1.get_coord()
-                coord2 = self.selected_sprite_2.get_coord()
-                self.swap_sprite(coord1, coord2)
-                if self.has_match(self.selected_sprite_1) or self.has_match(self.selected_sprite_2):
-                    self.game_status = GameStatus.ShowingMatched
-                    self.frame_delay = 30
-                else:
-                    self.selected_sprite_1.set_destination_by_sprite(self.selected_sprite_2)
-                    self.selected_sprite_2.set_destination_by_sprite(self.selected_sprite_1)
-                    self.game_status = GameStatus.SwapingBack
-        elif self.game_status == GameStatus.SwapingBack:
-            self.selected_sprite_1.process_frame()
-            self.selected_sprite_2.process_frame()
-            if self.selected_sprite_1.reached_destination() and self.selected_sprite_2.reached_destination():
-                self.selected_sprite_1 = None
-                self.selected_sprite_2 = None
-                self.game_status = GameStatus.Idle
-        elif self.game_status == GameStatus.ShowingMatched:
-            self.selected_sprite_1.show_sprite_info()
-            self.selected_sprite_2.show_sprite_info()
-            if self.has_match(self.selected_sprite_1):
-                self.set_matched_highlight(self.selected_sprite_1)
-            if self.has_match(self.selected_sprite_2):
-                self.set_matched_highlight(self.selected_sprite_2)
-            self.frame_delay -= 1
-            if self.frame_delay == 0:
-                self.game_status = GameStatus.ClearingCell
-        elif self.game_status == GameStatus.ClearingCell:
-            matched_coords1 = self.get_matched_coordinates(self.selected_sprite_1)
-            matched_coords2 = self.get_matched_coordinates(self.selected_sprite_2)
-            matched_count1 = len(matched_coords1)
-            matched_count2 = len(matched_coords2)
-            combo = 2 if matched_count1 > 0 and matched_count2 > 0 else 1
-            self.score += self.get_score(matched_count1 + matched_count2, combo)
-            self.clear_cells(matched_coords1)
-            self.clear_cells(matched_coords2)
+        if self.game_status not in self.action_dict:
+            raise Exception(f'unrecognized game status: {self.game_status}')
+        self.action_dict[self.game_status]()
+
+    def process_initializing(self) -> None:
+        return
+
+    def process_idle(self) -> None:
+        return
+
+    def process_swap_forward(self) -> None:
+        self.selected_sprite_1.process_frame()
+        self.selected_sprite_2.process_frame()
+        if self.selected_sprite_1.reached_destination() and self.selected_sprite_2.reached_destination():
+            coord1 = self.selected_sprite_1.get_coord()
+            coord2 = self.selected_sprite_2.get_coord()
+            self.swap_sprite(coord1, coord2)
+            if self.has_match(self.selected_sprite_1) or self.has_match(self.selected_sprite_2):
+                self.game_status = GameStatus.ShowingMatched
+                self.frame_delay = 30
+            else:
+                self.selected_sprite_1.set_destination_by_sprite(self.selected_sprite_2)
+                self.selected_sprite_2.set_destination_by_sprite(self.selected_sprite_1)
+                self.game_status = GameStatus.SwapingBack
+            
+    def process_swap_back(self) -> None:
+        self.selected_sprite_1.process_frame()
+        self.selected_sprite_2.process_frame()
+        if self.selected_sprite_1.reached_destination() and self.selected_sprite_2.reached_destination():
             self.selected_sprite_1 = None
             self.selected_sprite_2 = None
-            self.game_status = GameStatus.ClearingAnimation
-            self.frame_delay = 30
-        elif self.game_status == GameStatus.ClearingAnimation:
-            self.frame_delay -= 1
-            if self.frame_delay == 0:
-                self.game_status = GameStatus.DropingNewCell
-            
+            self.game_status = GameStatus.Idle
+    
+    def process_show_matched(self) -> None:
+        self.selected_sprite_1.show_sprite_info()
+        self.selected_sprite_2.show_sprite_info()
+        if self.has_match(self.selected_sprite_1):
+            self.set_matched_highlight(self.selected_sprite_1)
+        if self.has_match(self.selected_sprite_2):
+            self.set_matched_highlight(self.selected_sprite_2)
+        self.frame_delay -= 1
+        if self.frame_delay == 0:
+            self.game_status = GameStatus.ClearingBlock
+
+    def process_clear_block(self) -> None:
+        matched_coords1 = self.get_matched_coordinates(self.selected_sprite_1)
+        matched_coords2 = self.get_matched_coordinates(self.selected_sprite_2)
+        matched_count1 = len(matched_coords1)
+        matched_count2 = len(matched_coords2)
+        combo = 2 if matched_count1 > 0 and matched_count2 > 0 else 1
+        self.score += self.get_score(matched_count1 + matched_count2, combo)
+        self.clear_cells(matched_coords1)
+        self.clear_cells(matched_coords2)
+        self.selected_sprite_1 = None
+        self.selected_sprite_2 = None
+        self.game_status = GameStatus.ClearingAnimation
+        self.frame_delay = 30
+
+    def process_clear_animation(self) -> None:
+        self.frame_delay -= 1
+        if self.frame_delay == 0:
+            self.game_status = GameStatus.DropingNewBlock
+
+    def process_realign_block(sefl) -> None:
+        pass
+
+    def process_drop_new_blocks(self) -> None:
+        pass
+
     def has_match(self, sprite: ColorBlockSprite):
         matched_dict = self.get_matched_coordinates(sprite)
         return len(matched_dict) > 0
@@ -151,7 +175,7 @@ class GameManager:
             return
         self.selected_sprite_1.set_destination_by_sprite(self.selected_sprite_2)
         self.selected_sprite_2.set_destination_by_sprite(self.selected_sprite_1)
-        self.game_status = GameStatus.SwapForward
+        self.game_status = GameStatus.SwapingForward
 
     def swap_sprite(self, coord1: tuple, coord2: tuple):
         x1 = coord1[0]
