@@ -56,6 +56,7 @@ class GameManager:
                 self.swap_sprite(coord1, coord2)
                 if self.has_match(self.selected_sprite_1) or self.has_match(self.selected_sprite_2):
                     self.game_status = GameStatus.ShowingMatched
+                    self.frame_delay = 30
                 else:
                     self.selected_sprite_1.set_destination_by_sprite(self.selected_sprite_2)
                     self.selected_sprite_2.set_destination_by_sprite(self.selected_sprite_1)
@@ -74,11 +75,27 @@ class GameManager:
                 self.set_matched_highlight(self.selected_sprite_1)
             if self.has_match(self.selected_sprite_2):
                 self.set_matched_highlight(self.selected_sprite_2)
-            if self.frame_delay > 0:
-                self.frame_delay -= 1
-            else:
-                self.frame_delay = 30
+            self.frame_delay -= 1
+            if self.frame_delay == 0:
                 self.game_status = GameStatus.ClearingCell
+        elif self.game_status == GameStatus.ClearingCell:
+            matched_coords1 = self.get_matched_coordinates(self.selected_sprite_1)
+            matched_coords2 = self.get_matched_coordinates(self.selected_sprite_2)
+            matched_count1 = len(matched_coords1)
+            matched_count2 = len(matched_coords2)
+            combo = 2 if matched_count1 > 0 and matched_count2 > 0 else 1
+            self.score += self.get_score(matched_count1 + matched_count2, combo)
+            self.clear_cells(matched_coords1)
+            self.clear_cells(matched_coords2)
+            self.selected_sprite_1 = None
+            self.selected_sprite_2 = None
+            self.game_status = GameStatus.ClearingAnimation
+            self.frame_delay = 30
+        elif self.game_status == GameStatus.ClearingAnimation:
+            self.frame_delay -= 1
+            if self.frame_delay == 0:
+                self.game_status = GameStatus.DropingNewCell
+            
     def has_match(self, sprite: ColorBlockSprite):
         matched_dict = self.get_matched_coordinates(sprite)
         return len(matched_dict) > 0
@@ -221,4 +238,4 @@ class GameManager:
         for coord in clear_coordinates:
             x = coord[0]
             y = coord[1]
-            self.sprite_map[y][x] = None
+            self.sprite_map[y][x].cleared = True

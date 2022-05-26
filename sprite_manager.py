@@ -8,7 +8,7 @@ class SpriteBase:
     direction: str # only 'up', 'down', 'left', 'right'
     img: str
     color: str
-    show: bool
+    cleared: bool
     
     def __init__(self,
             x: int,
@@ -17,12 +17,12 @@ class SpriteBase:
             direction: str,
             img: str = '',
             color: str = '',
-            show = True) -> None:
+            cleared = False) -> None:
         self.x = x
         self.y = y
         self.img = img
         self.color = color
-        self.show = show
+        self.cleared = cleared
         self.set_speed(speed)
         self.set_direction(direction)
         
@@ -49,7 +49,7 @@ class ColorBlockSprite(SpriteBase):
             'down',
             '',
             cell.color,
-            True)
+            False)
 
     def set_destination(self, dest: tuple) -> None:
         if dest[0] > self.x:

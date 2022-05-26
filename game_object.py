@@ -16,5 +16,6 @@ class GameStatus(Enum):
     SwapingBack = 3,
     ShowingMatched = 4,
     ClearingCell = 5,
-    ReAligningCell = 6,
-    DropingNewCell = 7
+    ClearingAnimation = 6,
+    ReAligningCell = 7,
+    DropingNewCell = 8

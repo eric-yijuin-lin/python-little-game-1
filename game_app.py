@@ -2,6 +2,7 @@
 
 # Import and initialize the pygame library
 import pygame
+from sprite_manager import ColorBlockSprite
 
 from game_manager import GameManager
 from game_object import GameStatus
@@ -14,7 +15,8 @@ color_dict = {
         'yellow': (255, 255, 0),
         'purple': (255, 0, 255),
         'cyan': (0, 255, 255),
-        'black': (0, 0, 0)
+        'black': (0, 0, 0),
+        'white': (255, 255, 255)
     }
 pygame.init()
 
@@ -28,12 +30,29 @@ running = True
 fps_clock = pygame.time.Clock()
 debug = 0
 
-def draw_swapping(gm: GameManager):
+def draw_block(block_sprite: ColorBlockSprite) -> None:
+    color_key = 'white' if block_sprite.cleared else block_sprite.color
+    color_code = color_dict[color_key]
     pygame.draw.circle(
-                screen,
-                color_code,
-                ((x * block_size + block_size//2), (y * block_size) + block_size//2),
-                block_size//2)
+        screen,
+        color_code,
+        (
+            (block_sprite.x * block_size + block_size//2),
+            (block_sprite.y * block_size) + block_size//2
+        ),
+        block_size//2
+    )
+        
+    if sprite.hilighted and not sprite.cleared:
+        pygame.draw.rect(
+            screen,
+            (0, 0, 0),
+            pygame.Rect(
+                sprite.x * block_size, 
+                sprite.y * block_size, 
+                10,
+                10)
+        )
 
 while running:
 
@@ -62,23 +81,7 @@ while running:
     for y in range(0, gm.dimension_y):
         for x in range(0, gm.dimension_x):
             sprite = gm.sprite_map[y][x]
-            color_key = sprite.color
-            color_code = color_dict[color_key]
-            pygame.draw.circle(
-                screen,
-                color_code,
-                ((sprite.x * block_size + block_size//2), (sprite.y * block_size) + block_size//2),
-                block_size//2)
-            if sprite.hilighted:
-                pygame.draw.rect(
-                    screen,
-                    (0, 0, 0),
-                    pygame.Rect(
-                        sprite.x * block_size, 
-                        sprite.y * block_size, 
-                        10,
-                        10)
-                )
+            draw_block(sprite)
 
 
     # Flip the display
