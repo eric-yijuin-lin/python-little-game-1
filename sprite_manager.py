@@ -41,14 +41,14 @@ class SpriteBase:
 class ColorBlockSprite(SpriteBase):
     destination: tuple = None # (x, y)
     hilighted: bool = False
-    def __init__(self, cell: CellObject, speed) -> None:
+    def __init__(self, x: int, y: int, speed: float, color:str) -> None:
         super().__init__(
-            cell.x, 
-            cell.y,
+            x,
+            y,
             speed,
             'down',
             '',
-            cell.color,
+            color,
             False)
 
     def set_destination(self, dest: tuple) -> None:
@@ -109,3 +109,6 @@ class ColorBlockSprite(SpriteBase):
 
     def show_sprite_info(self) -> None:
         print(f'x={self.x}, y={self.y}, color={self.color}')
+
+    def get_sprite_info(self) -> str:
+        return f'x={self.x}, y={self.y}, color={self.color}'

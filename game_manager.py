@@ -41,16 +41,15 @@ class GameManager:
         }
 
     def init_cell_map(self) -> None:
-        for _ in range(0, self.dimension_y):
-            self.sprite_map.append([None] * self.dimension_x)
-        for y in range(0, self.dimension_y):
-            for x in range(0, self.dimension_x):
+        for _ in range(0, self.dimension_x):
+            self.sprite_map.append([None] * self.dimension_y)
+        for x in range(0, self.dimension_x):
+            for y in range(0, self.dimension_y):
                 available_colors = self.get_available_color(x, y)
                 rand_index = randint(0, len(available_colors) - 1)
                 color = available_colors[rand_index]
-                self.sprite_map[y][x] = ColorBlockSprite(
-                    CellObject(x, y, color), 0.03
-                )
+                self.sprite_map[x][y] = ColorBlockSprite(x, y, 0.03, color)
+        print('debug')
 
     def process_frame(self) -> None:
         if self.game_status not in self.action_dict:
@@ -114,26 +113,36 @@ class GameManager:
     def process_clear_animation(self) -> None:
         self.frame_delay -= 1
         if self.frame_delay == 0:
-            self.game_status = GameStatus.ReAligningBlock
+            self.game_status = GameStatus.NewBlockCreating
+
+    def process_new_block_create(self) -> None:
+        available_colors = list(self.color_dict.keys())
+        for x in range(0, self.dimension_x):
+            column = self.sprite_map[x]
+            cleared_count = sum(i.cleared for i in column)
+            for i in range(cleared_count):
+                rand_index = randint(0, len(available_colors) - 1)
+                color = available_colors[rand_index]
+                column.insert(0, ColorBlockSprite(x, 0 - i -1, 0.03, color))
+        self.game_status = GameStatus.ReAligningBlock
 
     def process_realign_block(self) -> None:
-        for x in range(0, self.dimension_x):
-            self.re_align_column(x)
+        self.refresh_cleared_map()
+        self.set_drop_destination()
         self.game_status = GameStatus.ReAligningAnimation
 
     def process_realign_animation(self) -> None:
         not_reached_count = 0
-        for x in range(0, self.dimension_x):
-            for y in range(0, self.dimension_y):
-                sprite = self.sprite_map[y][x]
+        for column in self.sprite_map:
+            cleared_count = sum(s.cleared for s in column)
+            if cleared_count == 0:
+                continue
+            for sprite in column:
                 sprite.process_frame()
                 if not sprite.reached_destination():
                     not_reached_count += 1
         if not_reached_count == 0:
-            self.game_status = GameStatus.NewBlockCreating
-
-    def process_new_block_create(self) -> None:
-        pass        
+            self.game_status = GameStatus.Idle
 
     def process_new_block_drop(self) -> None:
         pass
@@ -170,7 +179,7 @@ class GameManager:
             for j in range(check_range['y-start'], check_range['y-end']):
                 if not self.coord_helper.is_valid_coordinate(i, j):
                     continue
-                temp_cell = self.sprite_map[j][i]
+                temp_cell = self.sprite_map[i][j]
                 if temp_cell is not None and temp_cell.color is not None:
                     color_histogram[temp_cell.color] += 1
         return color_histogram
@@ -181,11 +190,11 @@ class GameManager:
             self.selected_sprite_2 = None
             return
         if self.selected_sprite_1 is None:
-            self.selected_sprite_1 = self.sprite_map[y][x]
+            self.selected_sprite_1 = self.sprite_map[x][y]
             self.selected_sprite_1.show_sprite_info()
             return
 
-        self.selected_sprite_2 = self.sprite_map[y][x]
+        self.selected_sprite_2 = self.sprite_map[x][y]
         self.selected_sprite_2.show_sprite_info()
         if not self.coord_helper.is_neighbor(self.selected_sprite_1, self.selected_sprite_2):
             self.selected_sprite_1 = None
@@ -200,21 +209,21 @@ class GameManager:
         y1 = coord1[1]
         x2 = coord2[0]
         y2 = coord2[1]
-        temp_color = self.sprite_map[y1][x1].color
+        temp_color = self.sprite_map[x1][y1].color
 
-        self.sprite_map[y1][x1].x = x1
-        self.sprite_map[y1][x1].y = y1
-        self.sprite_map[y1][x1].color = self.sprite_map[y2][x2].color
-        self.sprite_map[y2][x2].x = x2
-        self.sprite_map[y2][x2].y = y2
-        self.sprite_map[y2][x2].color = temp_color
+        self.sprite_map[x1][y1].x = x1
+        self.sprite_map[x1][y1].y = y1
+        self.sprite_map[x1][y1].color = self.sprite_map[x2][y2].color
+        self.sprite_map[x2][y2].x = x2
+        self.sprite_map[x2][y2].y = y2
+        self.sprite_map[x2][y2].color = temp_color
         
     def set_matched_highlight(self, sprite: ColorBlockSprite) -> None:
         matched_coords = self.get_matched_coordinates(sprite)
         for coord in matched_coords:
             x = coord[0]
             y = coord[1]
-            self.sprite_map[y][x].hilighted = True
+            self.sprite_map[x][y].hilighted = True
         sprite.hilighted = True
 
     def get_matched_count(self, color: str, clear_coordinates: list) -> int:
@@ -222,7 +231,7 @@ class GameManager:
         for coord in clear_coordinates:
             x = coord[0]
             y = coord[1]
-            if self.sprite_map[y][x].color == color:
+            if self.sprite_map[x][y].color == color:
                 count += 1
         return count
 
@@ -234,7 +243,7 @@ class GameManager:
             for coord in dir_coords:
                 x = coord[0]
                 y = coord[1]
-                if self.sprite_map[y][x].color == sprite.color:
+                if self.sprite_map[x][y].color == sprite.color:
                     dir_match += 1
             if dir_match == 2:
                 result[direction] = dir_match
@@ -272,7 +281,7 @@ class GameManager:
         for coord in coord_window:
             x = coord[0]
             y = coord[1]
-            if self.sprite_map[y][x].color != sprite.color:
+            if self.sprite_map[x][y].color != sprite.color:
                 return False
         return True
 
@@ -280,36 +289,24 @@ class GameManager:
         for coord in clear_coordinates:
             x = coord[0]
             y = coord[1]
-            self.sprite_map[y][x].cleared = True
+            self.sprite_map[x][y].cleared = True
 
-    def re_align_column(self, col_idx: int) -> None:
-        sprites = []
-        for y in range(self.dimension_y -1, -1, -1):
-            sprites.append(self.sprite_map[y][col_idx])
-        
-        drop_distance = 0
-        for sprite in sprites:
-            self.set_drop_destination(sprite, drop_distance)
-            if sprite.cleared:
-                drop_distance += 1
-    
-    def set_drop_destination(self, sprite: ColorBlockSprite, distance: int) -> None:
-        x = sprite.x
-        y = sprite.y + distance
-        sprite.set_destination((x, y))
+    def set_drop_destination(self) -> None:
+        for column in self.sprite_map:
+            drop_distance = 0
+            for sprite in column:
+                if sprite.cleared:
+                    drop_distance += 1
+                x = sprite.x
+                y = sprite.y + drop_distance
+                sprite.set_destination((x, y))        
 
-    def refresh_sprite_map(self) -> list:
-        '''
-        Refreshes sprite map status after clearing matched cells,
-        also returns a list represents the cleared count of each column
-        '''
-        column_clear_count = []
+    def refresh_cleared_map(self) -> None:
         for x in range(0, self.dimension_x):
-            count = 0
-            for y in range(self.dimension_y -1, -1, -1):
-                if self.sprite_map[y][x].cleared:
-                    count += 1
-                if self.coord_helper.is_valid_coordinate(x, y + count):
-                    self.sprite_map[y][x].color = self.sprite_map[y + count][x].color
-            column_clear_count.append(count)
-        return column_clear_count
+            column = self.sprite_map[x]
+            clear_count = 0
+            for i in range(len(column) - 1, -1, -1):
+                sprite = column[i]
+                if sprite.cleared:
+                    clear_count += 1
+                sprite.color = column[i - clear_count].color

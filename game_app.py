@@ -28,7 +28,7 @@ screen = pygame.display.set_mode([block_size * 8 + panel_length, block_size * 8]
 # Run until the user asks to quit
 running = True
 fps_clock = pygame.time.Clock()
-debug = 0
+debug_mode = False
 
 def draw_block(block_sprite: ColorBlockSprite) -> None:
     if block_sprite.cleared:
@@ -56,6 +56,14 @@ def draw_block(block_sprite: ColorBlockSprite) -> None:
                 10)
         )
 
+def draw_text(text: str, x: int, y: int) -> None:
+    myfont = pygame.font.SysFont("monospace", 20)
+    label = myfont.render(text, 1, (0,0,0))
+    screen.blit(label, (x, y))
+
+debug_msg = ''
+debug_coord = None
+
 while running:
 
     # Did the user click the window close button?
@@ -66,23 +74,29 @@ while running:
             pos = pygame.mouse.get_pos()
             x = pos[0] // block_size
             y = pos[1] // block_size
-            gm.set_selection(x, y)
+            if debug_mode:
+                debug_msg = gm.sprite_map[y][x].get_sprite_info()
+                debug_coord = (x, y)
+            else:
+                gm.set_selection(x, y)
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_SPACE:
                 gm = GameManager()
+            if event.key == pygame.K_d:
+                debug_mode = not debug_mode
 
-    if gm.game_status == GameStatus.Idle:
-        continue
     gm.process_frame()
 
     # Fill the background with white
     screen.fill((255, 255, 255))
+    draw_text(str(gm.game_status), 650, 100)
+    draw_text(str(debug_coord), 650, 200)
+    draw_text(debug_msg, 650, 300)
 
     # Draw a solid blue circle in the center
     # pygame.draw.circle(screen, (0, 255, 255), (250, 250), 75)
-    for y in range(0, gm.dimension_y):
-        for x in range(0, gm.dimension_x):
-            sprite = gm.sprite_map[y][x]
+    for column in gm.sprite_map:
+        for sprite in column:
             draw_block(sprite)
 
 
