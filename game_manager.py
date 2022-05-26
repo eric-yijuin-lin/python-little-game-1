@@ -86,8 +86,6 @@ class GameManager:
             self.game_status = GameStatus.Idle
     
     def process_show_matched(self) -> None:
-        self.selected_sprite_1.show_sprite_info()
-        self.selected_sprite_2.show_sprite_info()
         if self.has_match(self.selected_sprite_1):
             self.set_matched_highlight(self.selected_sprite_1)
         if self.has_match(self.selected_sprite_2):
@@ -127,7 +125,6 @@ class GameManager:
         self.game_status = GameStatus.ReAligningBlock
 
     def process_realign_block(self) -> None:
-        self.refresh_cleared_map()
         self.set_drop_destination()
         self.game_status = GameStatus.ReAligningAnimation
 
@@ -142,6 +139,7 @@ class GameManager:
                 if not sprite.reached_destination():
                     not_reached_count += 1
         if not_reached_count == 0:
+            self.refresh_realigned_map()
             self.game_status = GameStatus.Idle
 
     def process_new_block_drop(self) -> None:
@@ -290,23 +288,21 @@ class GameManager:
             x = coord[0]
             y = coord[1]
             self.sprite_map[x][y].cleared = True
+        print(f'cleared{clear_coordinates}')
 
     def set_drop_destination(self) -> None:
         for column in self.sprite_map:
             drop_distance = 0
-            for sprite in column:
+            for y in range(len(column) - 1, -1, -1):
+                sprite = column[y]
                 if sprite.cleared:
                     drop_distance += 1
                 x = sprite.x
                 y = sprite.y + drop_distance
-                sprite.set_destination((x, y))        
+                sprite.set_destination((x, y))
 
-    def refresh_cleared_map(self) -> None:
+    def refresh_realigned_map(self) -> None:
         for x in range(0, self.dimension_x):
-            column = self.sprite_map[x]
-            clear_count = 0
-            for i in range(len(column) - 1, -1, -1):
-                sprite = column[i]
-                if sprite.cleared:
-                    clear_count += 1
-                sprite.color = column[i - clear_count].color
+            cleared_count = sum(c.cleared for c in self.sprite_map[x])
+            if cleared_count > 0:
+                self.sprite_map[x] = list(filter(lambda x: (not x.cleared), self.sprite_map[x]))

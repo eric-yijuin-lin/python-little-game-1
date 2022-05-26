@@ -75,7 +75,7 @@ while running:
             x = pos[0] // block_size
             y = pos[1] // block_size
             if debug_mode:
-                debug_msg = gm.sprite_map[y][x].get_sprite_info()
+                debug_msg = gm.sprite_map[x][y].get_sprite_info()
                 debug_coord = (x, y)
             else:
                 gm.set_selection(x, y)
