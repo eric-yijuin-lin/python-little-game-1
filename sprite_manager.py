@@ -98,9 +98,9 @@ class ColorBlockSprite(SpriteBase):
         elif self.direction == 'right' and self.x < self.destination[0]:
             reach_x = False
         elif self.direction == 'up' and self.y > self.destination[1]:
-                reach_y = False
+            reach_y = False
         elif self.direction == 'down' and self.y < self.destination[1]:
-                reach_y = False
+            reach_y = False
 
         return reach_x and reach_y
 

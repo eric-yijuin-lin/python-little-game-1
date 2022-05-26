@@ -35,6 +35,7 @@ class GameManager:
             GameStatus.ClearingBlock: self.process_clear_block,
             GameStatus.ClearingAnimation: self.process_clear_animation,
             GameStatus.ReAligningBlock: self.process_realign_block,
+            GameStatus.ReAligningAnimation: self.process_realign_animation,
             GameStatus.DropingNewBlock: self.process_drop_new_blocks,
         }
 
@@ -112,10 +113,23 @@ class GameManager:
     def process_clear_animation(self) -> None:
         self.frame_delay -= 1
         if self.frame_delay == 0:
-            self.game_status = GameStatus.DropingNewBlock
+            self.game_status = GameStatus.ReAligningBlock
 
-    def process_realign_block(sefl) -> None:
-        pass
+    def process_realign_block(self) -> None:
+        for x in range(0, self.dimension_x):
+            self.re_align_column(x)
+        self.game_status = GameStatus.ReAligningAnimation
+
+    def process_realign_animation(self) -> None:
+        not_reached_count = 0
+        for x in range(0, self.dimension_x):
+            for y in range(0, self.dimension_y):
+                sprite = self.sprite_map[y][x]
+                sprite.process_frame()
+                if not sprite.reached_destination():
+                    not_reached_count += 1
+        if not_reached_count == 0:
+            self.game_status = GameStatus.DropingNewBlock
 
     def process_drop_new_blocks(self) -> None:
         pass
@@ -263,3 +277,19 @@ class GameManager:
             x = coord[0]
             y = coord[1]
             self.sprite_map[y][x].cleared = True
+
+    def re_align_column(self, col_idx: int) -> None:
+        sprites = []
+        for y in range(self.dimension_y -1, -1, -1):
+            sprites.append(self.sprite_map[y][col_idx])
+        
+        drop_distance = 0
+        for sprite in sprites:
+            self.set_drop_destination(sprite, drop_distance)
+            if sprite.cleared:
+                drop_distance += 1
+    
+    def set_drop_destination(self, sprite: ColorBlockSprite, distance: int) -> None:
+        x = sprite.x
+        y = sprite.y + distance
+        sprite.set_destination((x, y))

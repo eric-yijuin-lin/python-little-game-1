@@ -31,7 +31,9 @@ fps_clock = pygame.time.Clock()
 debug = 0
 
 def draw_block(block_sprite: ColorBlockSprite) -> None:
-    color_key = 'white' if block_sprite.cleared else block_sprite.color
+    if block_sprite.cleared:
+        return
+    color_key = block_sprite.color
     color_code = color_dict[color_key]
     pygame.draw.circle(
         screen,
