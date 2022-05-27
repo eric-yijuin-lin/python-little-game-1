@@ -1,7 +1,9 @@
 
 from random import randint
+from socre_module import ScoreInfo
 from sprite_manager import ColorBlockSprite
-from game_object import CellObject, GameStatus
+from game_object import GameStatus
+from socre_module import ScoreHelper
 from coordinate_module import ColorCheckRangeEnum, CoordinateHelper
 
 
@@ -24,6 +26,7 @@ class GameManager:
     }
 
     def __init__(self) -> None:
+        self.score_helper = ScoreHelper()
         self.coord_helper = CoordinateHelper(self.dimension_x, self.dimension_y)
         self.init_cell_map()
         self.action_dict = {
@@ -100,7 +103,7 @@ class GameManager:
         matched_count1 = len(matched_coords1)
         matched_count2 = len(matched_coords2)
         combo = 2 if matched_count1 > 0 and matched_count2 > 0 else 1
-        self.score += self.get_score(matched_count1 + matched_count2, combo)
+        self.score_helper.add_score(matched_count1 + matched_count2, combo)
         self.clear_cells(matched_coords1)
         self.clear_cells(matched_coords2)
         self.selected_sprite_1 = None
@@ -247,25 +250,6 @@ class GameManager:
                 result[direction] = dir_match
         return result
 
-    def get_score(self, matched_count: int, combo: int):
-        count_weight = self.get_score_weight(matched_count)
-        combo_weight = self.get_score_weight(combo)
-        return count_weight * 100 * combo_weight
-
-    def get_score_weight(self, count: int):
-        if count <= 3:
-            return 1.0
-        if count <= 4:
-            return 1.2
-        if count <= 5:
-            return 1.5
-        if count <= 6:
-            return 2
-        if count <= 7:
-            return 3
-        else:
-            return 3 + (count - 7) * (count - 7)
-
     def get_matched_coordinates(self, sprite: ColorBlockSprite) -> set:
         results = set()
         sliding_windows = self.coord_helper.get_sliding_windows(sprite)
@@ -306,3 +290,6 @@ class GameManager:
             cleared_count = sum(c.cleared for c in self.sprite_map[x])
             if cleared_count > 0:
                 self.sprite_map[x] = list(filter(lambda x: (not x.cleared), self.sprite_map[x]))
+
+    def get_score_info(self) -> ScoreInfo:
+        return self.score_helper.get_score_info()
