@@ -79,7 +79,7 @@ class GameManager:
                 self.selected_sprite_1.set_destination_by_sprite(self.selected_sprite_2)
                 self.selected_sprite_2.set_destination_by_sprite(self.selected_sprite_1)
                 self.game_status = GameStatus.SwapingBack
-            
+
     def process_swap_back(self) -> None:
         self.selected_sprite_1.process_frame()
         self.selected_sprite_2.process_frame()
@@ -87,7 +87,7 @@ class GameManager:
             self.selected_sprite_1 = None
             self.selected_sprite_2 = None
             self.game_status = GameStatus.Idle
-    
+
     def process_show_matched(self) -> None:
         if self.has_match(self.selected_sprite_1):
             self.set_matched_highlight(self.selected_sprite_1)
@@ -168,7 +168,7 @@ class GameManager:
         color_histogram = {}
         for color in colors:
             color_histogram[color] = 0
-        
+
         check_range = self.coord_helper.get_color_check_range(x, y, range_enum)
         for i in range(check_range['x-start'], check_range['x-end']):
             for j in range(check_range['y-start'], check_range['y-end']):
@@ -212,7 +212,7 @@ class GameManager:
         self.sprite_map[x2][y2].x = x2
         self.sprite_map[x2][y2].y = y2
         self.sprite_map[x2][y2].color = temp_color
-        
+
     def set_matched_highlight(self, sprite: ColorBlockSprite) -> None:
         matched_coords = self.get_matched_coordinates(sprite)
         for coord in matched_coords:

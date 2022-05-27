@@ -5,7 +5,6 @@ import pygame
 from sprite_manager import ColorBlockSprite
 
 from game_manager import GameManager
-from game_object import GameStatus
 
 gm = GameManager()
 color_dict = {
@@ -44,14 +43,14 @@ def draw_block(block_sprite: ColorBlockSprite) -> None:
         ),
         block_size//2
     )
-        
-    if sprite.hilighted and not sprite.cleared:
+
+    if block_sprite.hilighted and not block_sprite.cleared:
         pygame.draw.rect(
             screen,
             (0, 0, 0),
             pygame.Rect(
-                sprite.x * block_size, 
-                sprite.y * block_size, 
+                block_sprite.x * block_size,
+                block_sprite.y * block_size,
                 10,
                 10)
         )
