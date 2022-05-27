@@ -11,7 +11,7 @@ class GameManager:
     dimension_x = 8
     dimension_y = 8
     score = 0
-    frame_delay = 30
+    frame_delay = 28
     sprite_map = []
     matched_coords = []
     sprites_to_check = []
@@ -82,7 +82,7 @@ class GameManager:
                 self.sprites_to_check = [self.selected_sprite_1, self.selected_sprite_2]
                 self.show_matched_sprites(self.sprites_to_check)
                 self.game_status = GameStatus.ShowingFirstMatched
-                self.frame_delay = 30
+                self.frame_delay = 28
             else:
                 self.selected_sprite_1.set_destination_by_sprite(self.selected_sprite_2)
                 self.selected_sprite_2.set_destination_by_sprite(self.selected_sprite_1)
@@ -99,6 +99,7 @@ class GameManager:
 
     def process_show_first_matched(self) -> None:
         self.frame_delay -= 1
+        self.set_matched_sprite_alpha(self.frame_delay)
         if self.frame_delay == 0:
             self.game_status = GameStatus.ClearingFirstMatched
 
@@ -107,7 +108,7 @@ class GameManager:
         self.selected_sprite_1 = None
         self.selected_sprite_2 = None
         self.game_status = GameStatus.AnimatingFirstClear
-        self.frame_delay = 30
+        self.frame_delay = 28
 
     def process_animate_first_clear(self) -> None:
         self.frame_delay -= 1
@@ -158,19 +159,20 @@ class GameManager:
         if any_match:
             self.show_matched_sprites(self.sprites_to_check)
             self.game_status = GameStatus.ShowingDroppedMatch
-            self.frame_delay = 30
+            self.frame_delay = 28
         else:
             self.game_status = GameStatus.ShowTurnScore
 
     def process_show_drop_matched(self) -> None:
         self.frame_delay -= 1
+        self.set_matched_sprite_alpha(self.frame_delay)
         if self.frame_delay == 0:
             self.game_status = GameStatus.ClearingDroppedMatch
 
     def process_clear_drop_matched(self) -> None:
         self.clear_matched_blocks(self.sprites_to_check)
         self.game_status = GameStatus.AnimatingDroppedClear
-        self.frame_delay = 30
+        self.frame_delay = 28
 
     def process_animate_dropped_clear(self) -> None:
         self.frame_delay -= 1
@@ -337,5 +339,16 @@ class GameManager:
             cleared_count = sum(c.cleared for c in self.sprite_map[x])
             if cleared_count > 0:
                 self.sprite_map[x] = list(filter(lambda x: (not x.cleared), self.sprite_map[x]))
+
+    def set_matched_sprite_alpha(self, frame_seed: int) -> None:
+        for column in self.sprite_map:
+            for sprite in column:
+                if sprite.hilighted:
+                    sprite.set_alpha(frame_seed)
+
+    def get_sprite_by_coord(self, coord: tuple) -> ColorBlockSprite:
+        # x = coord[0], y = coord[1]
+        return self.sprite_map[coord[0]][coord[1]]
+
     def get_score_info(self) -> ScoreInfo:
         return self.score_helper.get_score_info()

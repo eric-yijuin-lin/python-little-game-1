@@ -42,21 +42,11 @@ def draw_block(block_sprite: ColorBlockSprite) -> None:
         return
     color_key = block_sprite.color
     img = img_dict[color_key]
+    img.set_alpha(block_sprite.alpha)
     screen.blit(
         img,
         (block_sprite.x * block_size, block_sprite.y * block_size)
     )
-
-    if block_sprite.hilighted and not block_sprite.cleared:
-        pygame.draw.rect(
-            screen,
-            (0, 0, 0),
-            pygame.Rect(
-                block_sprite.x * block_size,
-                block_sprite.y * block_size,
-                10,
-                10)
-        )
 
 def draw_text(text: str, x: int, y: int) -> None:
     myfont = pygame.font.SysFont("monospace", 20)

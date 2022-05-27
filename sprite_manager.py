@@ -1,6 +1,11 @@
 from __future__ import annotations # to allow type hint of class itself
 from game_object import CellObject
 
+alpha_table = [
+    255, 213, 171, 129, 87, 45, 3, 0, 42, 84, 126, 168, 210, 252,
+    255, 213, 171, 129, 87, 45, 3, 0, 42, 84, 126, 168, 210, 252,
+]
+
 class SpriteBase:
     x: int
     y: int
@@ -41,6 +46,7 @@ class SpriteBase:
 class ColorBlockSprite(SpriteBase):
     destination: tuple = None # (x, y)
     hilighted: bool = False
+    alpha: int = 255
     def __init__(self, x: int, y: int, speed: float, color:str) -> None:
         super().__init__(
             x,
@@ -64,6 +70,10 @@ class ColorBlockSprite(SpriteBase):
     def set_destination_by_sprite(self, sprite: ColorBlockSprite) -> None:
         dest = (sprite.x, sprite.y)
         self.set_destination(dest)
+
+    def set_alpha(self, frame_seed: int):
+        self.alpha = alpha_table[frame_seed]
+
     def move(self) -> None:
         if self.reached_destination():
             return
