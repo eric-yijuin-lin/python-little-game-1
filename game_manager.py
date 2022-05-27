@@ -98,14 +98,8 @@ class GameManager:
             self.game_status = GameStatus.ClearingBlock
 
     def process_clear_block(self) -> None:
-        matched_coords1 = self.get_matched_coordinates(self.selected_sprite_1)
-        matched_coords2 = self.get_matched_coordinates(self.selected_sprite_2)
-        matched_count1 = len(matched_coords1)
-        matched_count2 = len(matched_coords2)
-        combo = 2 if matched_count1 > 0 and matched_count2 > 0 else 1
-        self.score_helper.add_score(matched_count1 + matched_count2, combo)
-        self.clear_cells(matched_coords1)
-        self.clear_cells(matched_coords2)
+        center_coords = [self.selected_sprite_1, self.selected_sprite_2]
+        self.clear_matched_blocks(center_coords)
         self.selected_sprite_1 = None
         self.selected_sprite_2 = None
         self.game_status = GameStatus.ClearingAnimation
@@ -267,7 +261,17 @@ class GameManager:
                 return False
         return True
 
-    def clear_cells(self, clear_coordinates: list) -> None:
+    def clear_matched_blocks(self, sprites: list) -> None:
+        combo = 0
+        for sprite in sprites:
+            matched_coords = self.get_matched_coordinates(sprite)
+            matched_count = len(matched_coords)
+            if matched_count > 0:
+                combo += 1
+            self.clear_sprites(matched_coords)
+        self.score_helper.add_score(matched_count, combo)
+
+    def clear_sprites(self, clear_coordinates: list) -> None:
         for coord in clear_coordinates:
             x = coord[0]
             y = coord[1]
