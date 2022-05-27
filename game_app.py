@@ -6,17 +6,6 @@ from sprite_manager import ColorBlockSprite
 
 from game_manager import GameManager
 
-gm = GameManager()
-color_dict = {
-        'red': (255, 0, 0),
-        'green': (0, 255, 0),
-        'blue': (0, 0, 255),
-        'yellow': (255, 255, 0),
-        'purple': (255, 0, 255),
-        'cyan': (0, 255, 255),
-        'black': (0, 0, 0),
-        'white': (255, 255, 255)
-    }
 pygame.init()
 
 block_size = 80
@@ -29,19 +18,33 @@ running = True
 fps_clock = pygame.time.Clock()
 debug_mode = False
 
+debug_msg = ''
+debug_coord = None
+
+gm = GameManager()
+img_dict = {}
+color_keys = [
+    'red',
+    'green',
+    'blue',
+    'yellow',
+    'purple',
+    'pink'
+]
+
+for color in color_keys:
+    img = pygame.image.load(f'./img/{color}.png')
+    img = pygame.transform.scale(img, (block_size, block_size))
+    img_dict[color] = img
+
 def draw_block(block_sprite: ColorBlockSprite) -> None:
     if block_sprite.cleared:
         return
     color_key = block_sprite.color
-    color_code = color_dict[color_key]
-    pygame.draw.circle(
-        screen,
-        color_code,
-        (
-            (block_sprite.x * block_size + block_size//2),
-            (block_sprite.y * block_size) + block_size//2
-        ),
-        block_size//2
+    img = img_dict[color_key]
+    screen.blit(
+        img,
+        (block_sprite.x * block_size, block_sprite.y * block_size)
     )
 
     if block_sprite.hilighted and not block_sprite.cleared:
@@ -60,8 +63,6 @@ def draw_text(text: str, x: int, y: int) -> None:
     label = myfont.render(text, 1, (0,0,0))
     screen.blit(label, (x, y))
 
-debug_msg = ''
-debug_coord = None
 
 while running:
 

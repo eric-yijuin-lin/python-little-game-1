@@ -24,7 +24,7 @@ class GameManager:
         'blue': (0, 0, 255),
         'yellow': (255, 255, 0),
         'purple': (255, 0, 255),
-        'cyan': (0, 255, 255),
+        'pink': (128, 255, 255),
     }
 
     def __init__(self) -> None:
