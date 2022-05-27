@@ -34,7 +34,7 @@ class GameManager:
             GameStatus.Idle: self.process_idle,
             GameStatus.SwapingForward: self.process_swap_forward,
             GameStatus.SwapingBack: self.process_swap_back,
-            GameStatus.ShowingMatched: self.process_show_matched,
+            GameStatus.ShowingMatched: self.process_show_first_matched,
             GameStatus.ClearingBlock: self.process_clear_block,
             GameStatus.ClearingAnimation: self.process_clear_animation,
             GameStatus.ReAligningBlock: self.process_realign_block,
@@ -88,11 +88,9 @@ class GameManager:
             self.selected_sprite_2 = None
             self.game_status = GameStatus.Idle
 
-    def process_show_matched(self) -> None:
-        if self.has_match(self.selected_sprite_1):
-            self.set_matched_highlight(self.selected_sprite_1)
-        if self.has_match(self.selected_sprite_2):
-            self.set_matched_highlight(self.selected_sprite_2)
+    def process_show_first_matched(self) -> None:
+        sprites = [self.selected_sprite_1, self.selected_sprite_2]
+        self.show_matched_sprites(sprites)
         self.frame_delay -= 1
         if self.frame_delay == 0:
             self.game_status = GameStatus.ClearingBlock
@@ -145,6 +143,11 @@ class GameManager:
     def has_match(self, sprite: ColorBlockSprite):
         matched_dict = self.get_matched_coordinates(sprite)
         return len(matched_dict) > 0
+
+    def show_matched_sprites(self, sprites: list) -> None:
+        for sprite in sprites:
+            if self.has_match(sprite):
+                self.set_matched_highlight(sprite)
 
     def get_available_color(self, x: int, y: int) -> list:
         available_colors = list(self.color_dict.keys())
