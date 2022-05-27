@@ -13,6 +13,8 @@ class GameManager:
     score = 0
     frame_delay = 30
     sprite_map = []
+    matched_coords = []
+    sprites_to_check = []
     selected_sprite_1: ColorBlockSprite = None
     selected_sprite_2: ColorBlockSprite = None
     game_status = GameStatus.Initializing
@@ -34,16 +36,21 @@ class GameManager:
             GameStatus.Idle: self.process_idle,
             GameStatus.SwapingForward: self.process_swap_forward,
             GameStatus.SwapingBack: self.process_swap_back,
-            GameStatus.ShowingMatched: self.process_show_first_matched,
-            GameStatus.ClearingBlock: self.process_clear_block,
-            GameStatus.ClearingAnimation: self.process_clear_animation,
+            GameStatus.ShowingFirstMatched: self.process_show_first_matched,
+            GameStatus.ClearingFirstMatched: self.process_clear_first_matched,
+            GameStatus.AnimatingFirstClear: self.process_animate_first_clear,
             GameStatus.ReAligningBlock: self.process_realign_block,
-            GameStatus.ReAligningAnimation: self.process_realign_animation,
+            GameStatus.AnimatingReAlign: self.process_animate_realign,
             GameStatus.NewBlockCreating: self.process_new_block_create,
-            GameStatus.NewBlockDroping: self.process_new_block_drop,
+            GameStatus.DroppedBlockMatching: self.process_drop_matching,
+            GameStatus.ShowingDroppedMatch: self.process_show_drop_matched,
+            GameStatus.ClearingDroppedMatch: self.process_clear_drop_matched,
+            GameStatus.AnimatingDroppedClear: self.process_animate_dropped_clear,
+            GameStatus.ShowTurnScore: self.process_show_turn_score
         }
 
     def init_cell_map(self) -> None:
+        self.sprite_map = []
         for _ in range(0, self.dimension_x):
             self.sprite_map.append([None] * self.dimension_y)
         for x in range(0, self.dimension_x):
@@ -52,7 +59,6 @@ class GameManager:
                 rand_index = randint(0, len(available_colors) - 1)
                 color = available_colors[rand_index]
                 self.sprite_map[x][y] = ColorBlockSprite(x, y, 0.03, color)
-        print('debug')
 
     def process_frame(self) -> None:
         if self.game_status not in self.action_dict:
@@ -73,7 +79,9 @@ class GameManager:
             coord2 = self.selected_sprite_2.get_coord()
             self.swap_sprite(coord1, coord2)
             if self.has_match(self.selected_sprite_1) or self.has_match(self.selected_sprite_2):
-                self.game_status = GameStatus.ShowingMatched
+                self.sprites_to_check = [self.selected_sprite_1, self.selected_sprite_2]
+                self.show_matched_sprites(self.sprites_to_check)
+                self.game_status = GameStatus.ShowingFirstMatched
                 self.frame_delay = 30
             else:
                 self.selected_sprite_1.set_destination_by_sprite(self.selected_sprite_2)
@@ -84,26 +92,24 @@ class GameManager:
         self.selected_sprite_1.process_frame()
         self.selected_sprite_2.process_frame()
         if self.selected_sprite_1.reached_destination() and self.selected_sprite_2.reached_destination():
+            self.swap_sprite(self.selected_sprite_1.get_coord(), self.selected_sprite_2.get_coord())
             self.selected_sprite_1 = None
             self.selected_sprite_2 = None
             self.game_status = GameStatus.Idle
 
     def process_show_first_matched(self) -> None:
-        sprites = [self.selected_sprite_1, self.selected_sprite_2]
-        self.show_matched_sprites(sprites)
         self.frame_delay -= 1
         if self.frame_delay == 0:
-            self.game_status = GameStatus.ClearingBlock
+            self.game_status = GameStatus.ClearingFirstMatched
 
-    def process_clear_block(self) -> None:
-        center_coords = [self.selected_sprite_1, self.selected_sprite_2]
-        self.clear_matched_blocks(center_coords)
+    def process_clear_first_matched(self) -> None:
+        self.clear_matched_blocks(self.sprites_to_check)
         self.selected_sprite_1 = None
         self.selected_sprite_2 = None
-        self.game_status = GameStatus.ClearingAnimation
+        self.game_status = GameStatus.AnimatingFirstClear
         self.frame_delay = 30
 
-    def process_clear_animation(self) -> None:
+    def process_animate_first_clear(self) -> None:
         self.frame_delay -= 1
         if self.frame_delay == 0:
             self.game_status = GameStatus.NewBlockCreating
@@ -121,9 +127,9 @@ class GameManager:
 
     def process_realign_block(self) -> None:
         self.set_drop_destination()
-        self.game_status = GameStatus.ReAligningAnimation
+        self.game_status = GameStatus.AnimatingReAlign
 
-    def process_realign_animation(self) -> None:
+    def process_animate_realign(self) -> None:
         not_reached_count = 0
         for column in self.sprite_map:
             cleared_count = sum(s.cleared for s in column)
@@ -134,10 +140,44 @@ class GameManager:
                 if not sprite.reached_destination():
                     not_reached_count += 1
         if not_reached_count == 0:
-            self.refresh_realigned_map()
-            self.game_status = GameStatus.Idle
+            self.remove_cleared_sprites()
+            self.game_status = GameStatus.DroppedBlockMatching
 
-    def process_new_block_drop(self) -> None:
+    def process_drop_matching(self) -> None:
+        self.sprites_to_check = []
+        start_corrds = self.coord_helper.get_column_bottoms(self.matched_coords)
+        for coord in start_corrds:
+            x = coord[0]
+            for y in range(coord[1], - 1, -1):
+                self.sprites_to_check.append(self.sprite_map[x][y])
+        any_match = False
+        for sprite in self.sprites_to_check:
+            if self.has_match(sprite):
+                any_match = True
+                break
+        if any_match:
+            self.show_matched_sprites(self.sprites_to_check)
+            self.game_status = GameStatus.ShowingDroppedMatch
+            self.frame_delay = 30
+        else:
+            self.game_status = GameStatus.ShowTurnScore
+
+    def process_show_drop_matched(self) -> None:
+        self.frame_delay -= 1
+        if self.frame_delay == 0:
+            self.game_status = GameStatus.ClearingDroppedMatch
+
+    def process_clear_drop_matched(self) -> None:
+        self.clear_matched_blocks(self.sprites_to_check)
+        self.game_status = GameStatus.AnimatingDroppedClear
+        self.frame_delay = 30
+
+    def process_animate_dropped_clear(self) -> None:
+        self.frame_delay -= 1
+        if self.frame_delay == 0:
+            self.game_status = GameStatus.NewBlockCreating
+
+    def process_show_turn_score(self) -> None:
         pass
 
     def has_match(self, sprite: ColorBlockSprite):
@@ -267,11 +307,11 @@ class GameManager:
     def clear_matched_blocks(self, sprites: list) -> None:
         combo = 0
         for sprite in sprites:
-            matched_coords = self.get_matched_coordinates(sprite)
-            matched_count = len(matched_coords)
+            self.matched_coords = self.get_matched_coordinates(sprite)
+            matched_count = len(self.matched_coords)
             if matched_count > 0:
                 combo += 1
-            self.clear_sprites(matched_coords)
+            self.clear_sprites(self.matched_coords)
         self.score_helper.add_score(matched_count, combo)
 
     def clear_sprites(self, clear_coordinates: list) -> None:
@@ -292,11 +332,10 @@ class GameManager:
                 y = sprite.y + drop_distance
                 sprite.set_destination((x, y))
 
-    def refresh_realigned_map(self) -> None:
+    def remove_cleared_sprites(self) -> None:
         for x in range(0, self.dimension_x):
             cleared_count = sum(c.cleared for c in self.sprite_map[x])
             if cleared_count > 0:
                 self.sprite_map[x] = list(filter(lambda x: (not x.cleared), self.sprite_map[x]))
-
     def get_score_info(self) -> ScoreInfo:
         return self.score_helper.get_score_info()

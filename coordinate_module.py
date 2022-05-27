@@ -108,3 +108,18 @@ class CoordinateHelper:
             if is_window_needed:
                 result.append(temp_window)
         return result
+
+    def get_column_bottoms(self, coordinates: list) -> list:
+        '''Group the input coordinates by columns and returns the bottom coordinate of each column'''
+        column_bottoms = [None] * 8
+        for coord in coordinates:
+            x = coord[0]
+            y = coord[1]
+            if column_bottoms[x] is None:
+                column_bottoms[x] = (x, y)
+            elif column_bottoms[x][1] < y:
+                column_bottoms[x] = (x, y)
+        return list(
+            filter(lambda x: x is not None, column_bottoms)
+        )
+        # list(filter(lambda x: (not x.cleared), self.sprite_map[x]))
