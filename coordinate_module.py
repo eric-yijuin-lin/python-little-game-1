@@ -123,3 +123,15 @@ class CoordinateHelper:
             filter(lambda x: x is not None, column_bottoms)
         )
         # list(filter(lambda x: (not x.cleared), self.sprite_map[x]))
+
+    def get_score_sprite_coord(self, matched_coords: list) -> tuple:
+        left_sprite_coord = (999, 999)
+        top_sprite_coord = (999, 999)
+        for coord in matched_coords:
+            if left_sprite_coord[0] > coord[0]:
+                left_sprite_coord = coord
+            if top_sprite_coord[1] > coord[1]:
+                top_sprite_coord = coord
+        mid_x = (left_sprite_coord[0] + top_sprite_coord[0]) / 2
+        mid_y = (left_sprite_coord[1] + top_sprite_coord[1]) / 2
+        return (mid_x, mid_y)

@@ -17,8 +17,8 @@ class ScoreHelper:
         self.turn_combo = 1
         self.total_score = 0
 
-    def add_score(self, matched_count: int, combo: int, is_new_turn = True) -> None:
-        if is_new_turn:
+    def add_score(self, matched_count: int, combo: int, reset_combo = True) -> None:
+        if reset_combo:
             self.turn_combo = combo
             self.turn_matched_count = matched_count
         else:
@@ -27,11 +27,11 @@ class ScoreHelper:
 
         count_weight = self.get_score_weight(self.turn_matched_count)
         combo_weight = self.get_score_weight(self.turn_combo)
-        self.turn_score = 100 * count_weight * combo_weight
+        self.turn_score = 100 * matched_count * count_weight * combo_weight
         self.total_score += self.turn_score
 
     def get_score_info(self) -> ScoreInfo:
-        return ScoreInfo(self.tur, self.turn_combo, self.total_score)
+        return ScoreInfo(self.turn_score, self.turn_combo, self.total_score)
 
     def get_score_weight(self, count: int):
         if count <= 3:

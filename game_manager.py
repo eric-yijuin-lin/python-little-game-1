@@ -1,5 +1,6 @@
 
 from random import randint
+from sprite_manager import ScoreSprite
 from socre_module import ScoreInfo
 from sprite_manager import ColorBlockSprite
 from game_object import GameStatus
@@ -13,10 +14,11 @@ class GameManager:
     score = 0
     frame_delay = 28
     sprite_map = []
-    matched_coords = []
     sprites_to_check = []
+    matched_coords = set()
     selected_sprite_1: ColorBlockSprite = None
     selected_sprite_2: ColorBlockSprite = None
+    score_sprite = ScoreSprite(0, 0, 0.03, 'black')
     game_status = GameStatus.Initializing
     color_dict = {
         'red': (255, 0, 0),
@@ -104,7 +106,7 @@ class GameManager:
             self.game_status = GameStatus.ClearingFirstMatched
 
     def process_clear_first_matched(self) -> None:
-        self.clear_matched_blocks(self.sprites_to_check)
+        self.clear_matched_blocks(self.sprites_to_check, True)
         self.selected_sprite_1 = None
         self.selected_sprite_2 = None
         self.game_status = GameStatus.AnimatingFirstClear
@@ -156,12 +158,17 @@ class GameManager:
             if self.has_match(sprite):
                 any_match = True
                 break
+
         if any_match:
             self.show_matched_sprites(self.sprites_to_check)
             self.game_status = GameStatus.ShowingDroppedMatch
             self.frame_delay = 28
         else:
+            score_info = self.score_helper.get_score_info()
+            coordinate = self.coord_helper.get_score_sprite_coord(self.matched_coords)
+            self.score_sprite.set_score(coordinate, score_info)
             self.game_status = GameStatus.ShowTurnScore
+            self.frame_delay = 90
 
     def process_show_drop_matched(self) -> None:
         self.frame_delay -= 1
@@ -170,7 +177,7 @@ class GameManager:
             self.game_status = GameStatus.ClearingDroppedMatch
 
     def process_clear_drop_matched(self) -> None:
-        self.clear_matched_blocks(self.sprites_to_check)
+        self.clear_matched_blocks(self.sprites_to_check, False)
         self.game_status = GameStatus.AnimatingDroppedClear
         self.frame_delay = 28
 
@@ -180,7 +187,10 @@ class GameManager:
             self.game_status = GameStatus.NewBlockCreating
 
     def process_show_turn_score(self) -> None:
-        pass
+        self.score_sprite.process_frame()
+        self.frame_delay -= 1
+        if self.frame_delay == 0:
+            self.game_status = GameStatus.Idle
 
     def has_match(self, sprite: ColorBlockSprite):
         matched_dict = self.get_matched_coordinates(sprite)
@@ -306,15 +316,17 @@ class GameManager:
                 return False
         return True
 
-    def clear_matched_blocks(self, sprites: list) -> None:
+    def clear_matched_blocks(self, sprites: list, is_new_turn: bool) -> None:
         combo = 0
+        self.matched_coords = set()
         for sprite in sprites:
-            self.matched_coords = self.get_matched_coordinates(sprite)
-            matched_count = len(self.matched_coords)
-            if matched_count > 0:
-                combo += 1
-            self.clear_sprites(self.matched_coords)
-        self.score_helper.add_score(matched_count, combo)
+            for coord in self.get_matched_coordinates(sprite):
+                self.matched_coords.add(coord)
+        matched_count = len(self.matched_coords)
+        if matched_count > 0:
+            combo += 1
+            self.score_helper.add_score(matched_count, combo, is_new_turn)
+        self.clear_sprites(self.matched_coords)
 
     def clear_sprites(self, clear_coordinates: list) -> None:
         for coord in clear_coordinates:

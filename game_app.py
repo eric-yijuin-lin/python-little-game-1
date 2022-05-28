@@ -48,8 +48,8 @@ def draw_block(block_sprite: ColorBlockSprite) -> None:
         (block_sprite.x * block_size, block_sprite.y * block_size)
     )
 
-def draw_text(text: str, x: int, y: int) -> None:
-    myfont = pygame.font.SysFont("monospace", 20)
+def draw_text(text: str, x: int, y: int, size: int) -> None:
+    myfont = pygame.font.SysFont("monospace", size, bold=True)
     label = myfont.render(text, 1, (0,0,0))
     screen.blit(label, (x, y))
 
@@ -79,9 +79,10 @@ while running:
 
     # Fill the background with white
     screen.fill((255, 255, 255))
-    draw_text(str(gm.game_status), 650, 100)
-    draw_text(str(debug_coord), 650, 200)
-    draw_text(debug_msg, 650, 300)
+    draw_text(str(gm.game_status), 650, 100, 20)
+    draw_text(str(debug_coord), 650, 200, 20)
+    draw_text(debug_msg, 650, 300, 20)
+    draw_text(str(gm.score_sprite.score_info.total_score), 650, 400, 20)
 
     # Draw a solid blue circle in the center
     # pygame.draw.circle(screen, (0, 255, 255), (250, 250), 75)
@@ -89,6 +90,17 @@ while running:
         for sprite in column:
             draw_block(sprite)
 
+    if gm.score_sprite.alpha > 0:
+        draw_text(
+            str(gm.score_sprite.score_info.turn_combo) + "COMBO!!",
+            gm.score_sprite.x * block_size,
+            gm.score_sprite.y * block_size,
+            40)
+        draw_text(
+            str(gm.score_sprite.score_info.turn_score),
+            gm.score_sprite.x * block_size,
+            gm.score_sprite.y * block_size + block_size / 2,
+            40)
 
     # Flip the display
     pygame.display.flip()

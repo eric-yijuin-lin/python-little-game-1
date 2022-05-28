@@ -1,4 +1,5 @@
 from __future__ import annotations # to allow type hint of class itself
+from socre_module import ScoreInfo 
 from game_object import CellObject
 
 alpha_table = [
@@ -122,3 +123,35 @@ class ColorBlockSprite(SpriteBase):
 
     def get_sprite_info(self) -> str:
         return f'x={self.x}, y={self.y}, color={self.color}'
+
+class ScoreSprite(SpriteBase):
+    alpha: int = 0
+    score_info = ScoreInfo(0, 1, 0)
+    def __init__(self, x: int, y: int, speed: float, color: str = '') -> None:
+        super().__init__(
+            x,
+            y,
+            speed,
+            'up',
+            '',
+            color,
+            False)
+
+    def set_score(self, coordinate: tuple, score_info: ScoreInfo):
+        x = coordinate[0]
+        y = coordinate[1]
+        if y < 1:
+            y = 1
+
+        self.x = x
+        self.y = y
+        self.score_info = score_info
+        self.alpha = 255
+
+    def process_frame(self) -> None:
+        if self.alpha == 0:
+            return
+            
+        self.alpha -= 3
+        if self.alpha <= 0:
+            self.alpha = 0
