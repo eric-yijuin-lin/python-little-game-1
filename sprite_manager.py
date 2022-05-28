@@ -152,6 +152,6 @@ class ScoreSprite(SpriteBase):
         if self.alpha == 0:
             return
             
-        self.alpha -= 3
-        if self.alpha <= 0:
+        self.alpha -= 4
+        if self.alpha <= 100:
             self.alpha = 0

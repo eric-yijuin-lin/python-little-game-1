@@ -60,7 +60,7 @@ class GameManager:
                 available_colors = self.get_available_color(x, y)
                 rand_index = randint(0, len(available_colors) - 1)
                 color = available_colors[rand_index]
-                self.sprite_map[x][y] = ColorBlockSprite(x, y, 0.03, color)
+                self.sprite_map[x][y] = ColorBlockSprite(x, y, 0.06, color)
 
     def process_frame(self) -> None:
         if self.game_status not in self.action_dict:
@@ -125,7 +125,7 @@ class GameManager:
             for i in range(cleared_count):
                 rand_index = randint(0, len(available_colors) - 1)
                 color = available_colors[rand_index]
-                column.insert(0, ColorBlockSprite(x, 0 - i -1, 0.03, color))
+                column.insert(0, ColorBlockSprite(x, 0 - i -1, 0.06, color))
         self.game_status = GameStatus.ReAligningBlock
 
     def process_realign_block(self) -> None:
