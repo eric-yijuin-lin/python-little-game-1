@@ -1,10 +1,10 @@
 
 from random import randint
 from sprite_manager import ScoreSprite
-from socre_module import ScoreInfo
+from score_module import ScoreInfo
 from sprite_manager import ColorBlockSprite
 from game_object import GameStatus
-from socre_module import ScoreHelper
+from score_module import ScoreHelper
 from coordinate_module import ColorCheckRangeEnum, CoordinateHelper
 
 

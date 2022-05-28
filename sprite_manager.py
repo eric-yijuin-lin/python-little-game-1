@@ -1,5 +1,5 @@
 from __future__ import annotations # to allow type hint of class itself
-from socre_module import ScoreInfo 
+from score_module import ScoreInfo 
 from game_object import CellObject
 
 alpha_table = [
@@ -126,7 +126,7 @@ class ColorBlockSprite(SpriteBase):
 
 class ScoreSprite(SpriteBase):
     alpha: int = 0
-    score_info = ScoreInfo(0, 1, 0)
+    score_info = ScoreInfo()
     def __init__(self, x: int, y: int, speed: float, color: str = '') -> None:
         super().__init__(
             x,

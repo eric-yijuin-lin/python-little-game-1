@@ -49,7 +49,7 @@ def draw_block(block_sprite: ColorBlockSprite) -> None:
     )
 
 def draw_text(text: str, x: int, y: int, size: int) -> None:
-    myfont = pygame.font.SysFont("monospace", size, bold=True)
+    myfont = pygame.font.Font("./Font/msjh.ttf", size, bold=True)
     label = myfont.render(text, 1, (0,0,0))
     screen.blit(label, (x, y))
 
@@ -79,10 +79,16 @@ while running:
 
     # Fill the background with white
     screen.fill((255, 255, 255))
-    draw_text(str(gm.game_status), 650, 100, 20)
-    draw_text(str(debug_coord), 650, 200, 20)
-    draw_text(debug_msg, 650, 300, 20)
-    draw_text(str(gm.score_sprite.score_info.total_score), 650, 400, 20)
+    draw_text("Game Status", 650, 50, 20)
+    draw_text(str(gm.game_status).replace("GameStatus.", ""), 650, 75, 16)
+    draw_text("最高 Combo", 650, 150, 20)
+    draw_text(str(gm.score_sprite.score_info.max_combo), 650, 175, 20)
+    draw_text("最高消除個數", 650, 250, 20)
+    draw_text(str(gm.score_sprite.score_info.max_matched_count), 650, 275, 20)
+    draw_text("最高消除個數", 650, 350, 20)
+    draw_text(str(gm.score_sprite.score_info.total_score), 650, 375, 20)
+    # draw_text(str(debug_coord), 650, 200, 20)
+    # draw_text(debug_msg, 650, 300, 20)
 
     # Draw a solid blue circle in the center
     # pygame.draw.circle(screen, (0, 255, 255), (250, 250), 75)
