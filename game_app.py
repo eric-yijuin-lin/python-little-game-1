@@ -2,6 +2,7 @@
 
 # Import and initialize the pygame library
 import pygame
+from game_object import GameStatus
 from sprite_manager import ColorBlockSprite
 
 from game_manager import GameManager
@@ -54,7 +55,8 @@ def draw_text(text: str, x: int, y: int, size: int, alpha: int) -> None:
     label.set_alpha(alpha)
     screen.blit(label, (x, y))
 
-
+start_text_alpha = 255
+start_text_alpha_change = -8
 while running:
 
     # Did the user click the window close button?
@@ -75,6 +77,25 @@ while running:
                 gm = GameManager()
             if event.key == pygame.K_d:
                 debug_mode = not debug_mode
+            if event.key == pygame.K_RETURN:
+                gm.game_status = GameStatus.Idle
+
+    if gm.game_status == GameStatus.Initializing:
+        continue
+    if gm.game_status == GameStatus.WaitingStart:
+        screen_size =  screen.get_size()
+        x = screen_size[0] / 2
+        y = screen_size[1] / 2 
+        screen.fill((255, 255, 255))
+        draw_text("按下 Enter 開始遊戲", x - 100, y - 50, 24, start_text_alpha)
+        start_text_alpha += start_text_alpha_change
+        if start_text_alpha < 0:
+            start_text_alpha_change = 8
+        elif start_text_alpha > 255:
+            start_text_alpha_change = -8.
+        pygame.display.flip()
+        fps_clock.tick(40)
+        continue
 
     gm.process_frame()
 

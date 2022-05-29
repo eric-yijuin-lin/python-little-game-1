@@ -34,8 +34,9 @@ class GameManager:
         self.coord_helper = CoordinateHelper(self.dimension_x, self.dimension_y)
         self.init_cell_map()
         self.action_dict = {
-            GameStatus.Initializing: self.process_initializing,
-            GameStatus.Idle: self.process_idle,
+            GameStatus.Initializing: self.process_skip,
+            GameStatus.WaitingStart: self.process_skip,
+            GameStatus.Idle: self.process_skip,
             GameStatus.SwapingForward: self.process_swap_forward,
             GameStatus.SwapingBack: self.process_swap_back,
             GameStatus.ShowingFirstMatched: self.process_show_first_matched,
@@ -50,6 +51,7 @@ class GameManager:
             GameStatus.AnimatingDroppedClear: self.process_animate_dropped_clear,
             GameStatus.ShowTurnScore: self.process_show_turn_score
         }
+        self.game_status = GameStatus.WaitingStart
 
     def init_cell_map(self) -> None:
         self.sprite_map = []
@@ -67,10 +69,7 @@ class GameManager:
             raise Exception(f'unrecognized game status: {self.game_status}')
         self.action_dict[self.game_status]()
 
-    def process_initializing(self) -> None:
-        return
-
-    def process_idle(self) -> None:
+    def process_skip(self) -> None:
         return
 
     def process_swap_forward(self) -> None:
